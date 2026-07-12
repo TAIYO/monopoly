@@ -241,18 +241,24 @@
    ここを、あなたのFirebaseプロジェクトの設定に置き換えてください
    Firebaseコンソール > プロジェクトの設定 > マイアプリ で取得できます
 ========================================================= */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDrCQQN5Qrldp0uMpsAjct-b3HAj3Td_IY",
+  authDomain: "monopoly-15336.firebaseapp.com",
+  databaseURL: "https://monopoly-15336-default-rtdb.firebaseio.com",
+  projectId: "monopoly-15336",
+  storageBucket: "monopoly-15336.firebasestorage.app",
+  messagingSenderId: "955697337253",
+  appId: "1:955697337253:web:8907b242fc286d1bc20e4c"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
 /* ================= 盤面データ ================= */
 const GROUP_COLOR = {
