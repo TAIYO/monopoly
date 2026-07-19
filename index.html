@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>日本縦断モノポリー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F7F2E7;
+    --paper: #FFFDF8;
+    --ink: #1F2A44;
+    --ink-soft: #5B6478;
+    --gold: #C29A3B;
+    --line: #DDD3BE;
+    --danger: #C0392B;
+    --safe: #3C8C5E;
+    --brown:#8B5E3C; --cyan:#4FB3D9; --pink:#E38AAE; --orange:#E8823C;
+    --red:#C0392B; --yellow:#DDB23C; --green:#3C8C5E; --navy:#2D4373;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:'Zen Kaku Gothic New',sans-serif; -webkit-tap-highlight-color:transparent;}
+  h1,h2,h3{font-family:'Shippori Mincho',serif; margin:0 0 8px;}
+  button{font-family:inherit; cursor:pointer;}
+  input{font-family:inherit;}
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  .screen{display:none;padding:16px;padding-bottom:40px;}
+  .screen.active{display:block;}
+
+  /* ---- Title ---- */
+  .brand{text-align:center;padding:36px 0 20px;}
+  .brand .eyebrow{letter-spacing:.3em;font-size:11px;color:var(--gold);font-weight:700;}
+  .brand h1{font-size:30px;line-height:1.3;}
+  .brand .sub{color:var(--ink-soft);font-size:13px;margin-top:4px;}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;
+    box-shadow:0 1px 0 rgba(0,0,0,.03);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;}
+  .btn{display:block;width:100%;text-align:center;padding:14px;border-radius:10px;border:none;font-size:15px;font-weight:700;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn[disabled]{opacity:.4;}
+  .divider{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:12px;margin:18px 0;}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line);}
+  .error{color:var(--danger);font-size:13px;margin-top:6px;min-height:16px;}
+
+  /* ---- Lobby ---- */
+  .roomcode{font-family:'Shippori Mincho',serif;font-size:34px;letter-spacing:.15em;text-align:center;color:var(--ink);}
+  .roomcode-label{text-align:center;font-size:11px;color:var(--ink-soft);letter-spacing:.2em;}
+  .player-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);}
+  .player-row:last-child{border-bottom:none;}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .label{font-size:14px;}
+  .toggle-row .desc{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .switch{position:relative;width:44px;height:26px;background:var(--line);border-radius:20px;flex-shrink:0;transition:background .15s;}
+  .switch.on{background:var(--safe);}
+  .switch .knob{position:absolute;top:2px;left:2px;width:22px;height:22px;background:#fff;border-radius:50%;transition:left .15s;}
+  .switch.on .knob{left:20px;}
+  select.mini{padding:8px 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;background:#fff;}
+
+  /* ---- Game screen ---- */
+  .sticky-header{position:sticky;top:0;z-index:15;background:var(--bg);padding-top:2px;padding-bottom:6px;
+    margin:0 -16px;padding-left:16px;padding-right:16px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 4px;}
+  .topbar .code{font-size:12px;color:var(--ink-soft);letter-spacing:.15em;}
+  .turn-banner{background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;
+    display:flex;justify-content:space-between;align-items:center;}
+  .turn-banner .who{font-size:15px;font-weight:700;}
+  .turn-banner .who .name{color:#F2D98C;}
+  .timer-badge{font-size:12px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;}
+
+  .status-banner{background:#FBF3DC;border:1px solid var(--gold);border-radius:10px;padding:9px 12px;
+    font-size:13px;font-weight:700;color:#6B5220;margin-bottom:10px;min-height:18px;}
+  .status-banner:empty{display:none;}
+
+  .players-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;}
+  .player-card{flex-shrink:0;width:128px;background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:10px;position:relative;}
+  .player-card.current{border-color:var(--gold);box-shadow:0 0 0 2px rgba(194,154,59,.25);}
+  .player-card.bankrupt{opacity:.4;}
+  .player-card .pname{font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;}
+  .player-card .pmoney{font-size:15px;font-weight:900;color:var(--navy);margin-top:4px;}
+  .player-card .pmeta{font-size:10px;color:var(--ink-soft);margin-top:3px;}
+  .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+  .section-title{font-size:12px;letter-spacing:.15em;color:var(--ink-soft);margin:18px 0 8px;font-weight:700;}
+
+  /* ---- Board: vertical rail-map style ---- */
+  .board{position:relative;padding-left:26px;}
+  .board::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;width:3px;background:var(--line);border-radius:3px;}
+  .tile{position:relative;display:flex;align-items:center;gap:10px;padding:9px 0;min-height:40px;}
+  .tile .station{position:absolute;left:-26px;width:20px;height:20px;border-radius:50%;background:var(--paper);
+    border:3px solid var(--ink-soft);display:flex;align-items:center;justify-content:center;}
+  .tile .group-chip{width:8px;align-self:stretch;border-radius:4px;flex-shrink:0;}
+  .tile .info{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 10px;position:relative;}
+  .tile .owner-badge{position:absolute;top:8px;right:10px;font-size:10px;font-weight:700;padding:2px 8px;
+    border-radius:8px;color:#fff;white-space:nowrap;}
+  .tile .tname{font-size:13px;font-weight:700;}
+  .tile .tmeta{font-size:10px;color:var(--ink-soft);margin-top:2px;}
+  .tile .tokens{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+  .tile .token{padding:2px 7px;border-radius:10px;color:#fff;font-size:10px;font-weight:700;display:inline-flex;
+    align-items:center;white-space:nowrap;flex-shrink:0;}
+  .tile.special .info{background:#FBF7ED;}
+
+  .actionbar{position:sticky;bottom:0;background:var(--bg);padding-top:10px;margin-top:16px;}
+  .actionbar .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .log-box{max-height:150px;overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:12px;color:var(--ink-soft);}
+  .log-box div{padding:3px 0;border-bottom:1px dashed var(--line);}
+  .log-box div:last-child{border-bottom:none;}
+
+  .modal-back{position:fixed;inset:0;background:rgba(31,42,68,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;}
+  .modal{background:var(--paper);border-radius:18px 18px 0 0;padding:22px 18px 26px;width:100%;max-width:520px;
+    max-height:85vh;overflow-y:auto;}
+  .modal h3{font-size:17px;}
+  .modal .amount{font-size:26px;font-weight:900;color:var(--navy);margin:10px 0;}
+  .hidden{display:none !important;}
+  .exit-link{position:absolute;top:14px;right:16px;font-size:12px;color:var(--ink-soft);background:none;
+    border:1px solid var(--line);border-radius:8px;padding:5px 10px;}
+  .prop-pick{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
+  .prop-pick label{display:flex;align-items:center;gap:4px;font-size:11px;background:#F3EEE0;border:1px solid var(--line);
+    border-radius:8px;padding:5px 8px;}
+  .trade-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
+  .trade-card .ttitle{font-size:12px;color:var(--ink-soft);margin-bottom:4px;}
+  .trade-card .tbody{font-size:13px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= TITLE SCREEN ================= -->
+  <section class="screen active" id="screen-title">
+    <div class="brand">
+      <div class="eyebrow">JAPAN RAIL MONOPOLY</div>
+      <h1>日本縦断モノポリー</h1>
+      <div class="sub">友達とルームを作って、スマホでオンライン対戦</div>
+    </div>
+
+    <div class="card">
+      <h3>ルームを作る</h3>
+      <div class="field">
+        <label>あなたの名前</label>
+        <input id="create-name" maxlength="8" placeholder="例:たろう">
+      </div>
+      <button class="btn btn-primary" id="btn-create">ルームを作成</button>
+    </div>
+
+    <div class="divider">または</div>
+
+    <div class="card">
+      <h3>ルームに参加</h3>
+      <div class="field">
+        <label>ルームコード</label>
+        <input id="join-code" maxlength="6" placeholder="例:AB12CD" style="text-transform:uppercase;letter-spacing:.1em;">
+      </div>
+      <div class="field">
+        <label>あなたの名前</label>
+        <input id="join-name" maxlength="8" placeholder="例:はなこ">
+      </div>
+      <button class="btn btn-gold" id="btn-join">参加する</button>
+    </div>
+    <div class="error" id="title-error"></div>
+  </section>
+
+  <!-- ================= LOBBY SCREEN ================= -->
+  <section class="screen" id="screen-lobby" style="position:relative;">
+    <button class="exit-link" id="btn-exit-lobby">🚪 退出</button>
+    <div class="roomcode-label">ROOM CODE</div>
+    <div class="roomcode" id="lobby-code">------</div>
+    <div style="text-align:center;margin-bottom:14px;">
+      <button class="btn btn-ghost" id="btn-open-rules-lobby" style="width:auto;padding:6px 14px;font-size:12px;">📖 ルールを確認</button>
+    </div>
+
+    <div class="card">
+      <h3>参加者</h3>
+      <div id="lobby-players"></div>
+    </div>
+
+    <div class="card" id="lobby-settings-card">
+      <h3>ルーム設定<span id="host-badge" style="font-size:11px;color:var(--ink-soft);font-weight:400;">(ホストのみ変更可)</span></h3>
+
+      <div class="toggle-row">
+        <div><div class="label">オークション</div><div class="desc">誰も購入しない物件を競売にかける ・ <span style="color:var(--danger);font-weight:700;">⚠️ 現在工事中のため無効です</span></div></div>
+        <div class="switch" data-setting="auctionEnabled" style="opacity:.4;pointer-events:none;"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="label">家・ホテルの在庫制限</div><div class="desc">家32軒・ホテル12軒までの取り合いあり</div></div>
+        <div class="switch" data-setting="houseLimitEnabled"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="label">ゾロ目ルール</div><div class="desc">ゾロ目でもう一度振れる/3連続で刑務所行き</div></div>
+        <div class="switch" data-setting="doublesRuleEnabled"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="label">ターン時間制限</div><div class="desc">60秒操作がなければ自動的にターンを飛ばす</div></div>
+        <div class="switch" data-setting="turnTimerEnabled"><div class="knob"></div></div>
+      </div>
+      <div class="toggle-row">
+        <div><div class="label">初期所持金</div><div class="desc">ゲーム開始時の所持金</div></div>
+        <select class="mini" id="starting-money-select">
+          <option value="1000">¥1,000</option>
+          <option value="1500">¥1,500(標準)</option>
+          <option value="2000">¥2,000</option>
+          <option value="4000">¥4,000</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div><div class="label">勝利条件</div><div class="desc">最後の1人まで/規定ターン数で資産最大</div></div>
+        <select class="mini" id="win-condition-select">
+          <option value="elimination">最後の1人まで</option>
+          <option value="turnLimit">規定ターン数で判定</option>
+        </select>
+      </div>
+      <div class="field" id="turn-limit-field" style="margin-top:10px;">
+        <label>規定ターン数</label>
+        <select class="mini" id="turn-limit-count" style="width:100%;">
+          <option value="40">40手番(短め・全員合計)</option>
+          <option value="80">80手番(標準・全員合計)</option>
+          <option value="150">150手番(長め・全員合計)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-start-game">ゲーム開始</button>
+    <div class="error" id="lobby-error"></div>
+  </section>
+
+  <!-- ================= GAME SCREEN ================= -->
+  <section class="screen" id="screen-game">
+    <div class="sticky-header">
+      <div class="topbar">
+        <div class="code">ROOM <b id="game-code"></b></div>
+        <button class="btn btn-ghost" id="btn-open-rules" style="padding:5px 12px;font-size:12px;width:auto;">📖 ルール</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="code" id="game-status"></div>
+          <button class="exit-link" style="position:static;" id="btn-exit-game">🚪 退出</button>
+        </div>
+      </div>
+
+      <div class="turn-banner">
+        <div class="who">
+          今のターン: <span class="name" id="turn-player-name">-</span>
+          <div style="font-size:11px;font-weight:400;color:#B9C2D6;margin-top:2px;">現在位置: <span id="turn-player-location">-</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="timer-badge" id="turn-count-badge">ターン1</div>
+          <div class="timer-badge hidden" id="timer-badge">60</div>
+        </div>
+      </div>
+
+      <div class="status-banner" id="status-banner"></div>
+
+      <div class="players-scroll" id="players-scroll"></div>
+    </div>
+
+    <div class="card hidden" id="spectator-banner" style="background:#FBEFE9;border-color:#E8823C;">
+      <div style="font-size:13px;">👀 あなたは破産しました。このままゲームの行方を観戦できます。</div>
+    </div>
+
+    <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button class="btn btn-ghost" id="btn-open-trade">🤝 トレード</button>
+      <button class="btn btn-ghost" id="btn-open-build">🏠 建設</button>
+      <button class="btn btn-ghost" id="btn-open-mortgage">🏦 抵当</button>
+      <button class="btn btn-ghost" id="btn-open-assets">🎫 所持品一覧</button>
+    </div>
+    <div id="trade-inbox"></div>
+
+    <div class="section-title">路線図(盤面)</div>
+    <div class="board" id="board"></div>
+
+    <div class="actionbar">
+      <div id="action-slot"></div>
+      <div class="section-title">ログ</div>
+      <div class="log-box" id="log-box"></div>
+    </div>
+  </section>
+
+  <!-- ================= END SCREEN ================= -->
+  <section class="screen" id="screen-end">
+    <div class="brand">
+      <div class="eyebrow">GAME OVER</div>
+      <h1 id="end-title">ゲーム終了</h1>
+      <div class="sub" id="end-sub"></div>
+    </div>
+    <div class="card">
+      <h3>最終結果</h3>
+      <div id="end-results"></div>
+    </div>
+    <div class="card">
+      <h3>ゲームログ</h3>
+      <div class="log-box" id="end-log-box" style="max-height:280px;"></div>
+    </div>
+    <button class="btn btn-primary" id="btn-back-to-title">タイトルに戻る</button>
+  </section>
+
+</div>
+
+<div class="modal-back hidden" id="modal-back">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Firebase (compat SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* =========================================================
+   ここを、あなたのFirebaseプロジェクトの設定に置き換えてください
+   Firebaseコンソール > プロジェクトの設定 > マイアプリ で取得できます
+========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDrCQQN5Qrldp0uMpsAjct-b3HAj3Td_IY",
+  authDomain: "monopoly-15336.firebaseapp.com",
+  databaseURL: "https://monopoly-15336-default-rtdb.firebaseio.com",
+  projectId: "monopoly-15336",
+  storageBucket: "monopoly-15336.firebasestorage.app",
+  messagingSenderId: "955697337253",
+  appId: "1:955697337253:web:8907b242fc286d1bc20e4c"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+/* ================= 盤面データ ================= */
+const GROUP_COLOR = {
+  brown:'var(--brown)', cyan:'var(--cyan)', pink:'var(--pink)', orange:'var(--orange)',
+  red:'var(--red)', yellow:'var(--yellow)', green:'var(--green)', navy:'var(--navy)'
+};
+const GROUP_HOUSECOST = { brown:50, cyan:50, pink:100, orange:100, red:150, yellow:150, green:200, navy:200 };
+
+function mk(id,name,type,extra){ return Object.assign({id,name,type},extra||{}); }
+
+const BOARD = [
+  mk(0,'スタート(GO)','go'),
+  mk(1,'稚内','property',{group:'brown',price:60}),
+  mk(2,'共同募金','chest'),
+  mk(3,'釧路','property',{group:'brown',price:60}),
+  mk(4,'所得税','tax',{amount:200}),
+  mk(5,'北海道新幹線','railroad',{price:200}),
+  mk(6,'旭川','property',{group:'cyan',price:100}),
+  mk(7,'チャンス','chance'),
+  mk(8,'小樽','property',{group:'cyan',price:100}),
+  mk(9,'函館','property',{group:'cyan',price:120}),
+  mk(10,'刑務所(見学のみ)','jailVisit'),
+  mk(11,'仙台','property',{group:'pink',price:140}),
+  mk(12,'電力会社','utility',{price:150}),
+  mk(13,'盛岡','property',{group:'pink',price:140}),
+  mk(14,'山形','property',{group:'pink',price:160}),
+  mk(15,'東北新幹線','railroad',{price:200}),
+  mk(16,'新潟','property',{group:'orange',price:180}),
+  mk(17,'共同募金','chest'),
+  mk(18,'金沢','property',{group:'orange',price:180}),
+  mk(19,'松本','property',{group:'orange',price:200}),
+  mk(20,'無料駐車場','freeParking'),
+  mk(21,'名古屋','property',{group:'red',price:220}),
+  mk(22,'チャンス','chance'),
+  mk(23,'京都','property',{group:'red',price:220}),
+  mk(24,'奈良','property',{group:'red',price:240}),
+  mk(25,'東海道新幹線','railroad',{price:200}),
+  mk(26,'大阪','property',{group:'yellow',price:260}),
+  mk(27,'神戸','property',{group:'yellow',price:260}),
+  mk(28,'水道局','utility',{price:150}),
+  mk(29,'広島','property',{group:'yellow',price:280}),
+  mk(30,'刑務所へ行く','goToJail'),
+  mk(31,'福岡','property',{group:'green',price:300}),
+  mk(32,'熊本','property',{group:'green',price:300}),
+  mk(33,'共同募金','chest'),
+  mk(34,'那覇','property',{group:'green',price:320}),
+  mk(35,'山陽新幹線','railroad',{price:200}),
+  mk(36,'チャンス','chance'),
+  mk(37,'横浜','property',{group:'navy',price:350}),
+  mk(38,'贅沢税','tax',{amount:100}),
+  mk(39,'東京','property',{group:'navy',price:400}),
+];
+BOARD.forEach(t=>{ if(t.type==='property'){ t.baseRent = Math.round(t.price/10); t.houseCost = GROUP_HOUSECOST[t.group]; }});
+
+const RAIL_RENT = [0,25,50,100,200];
+const PLAYER_COLORS = ['#5B4B8A','#1F7A6C','#B3466C','#3B6E91','#946E3D','#4C4C4C'];
+
+/* ================= 状態 ================= */
+let ROOM_CODE = null;
+let MY_UID = null;
+let MY_NAME = null;
+let IS_HOST = false;
+let roomRef = null;
+let roomData = null;
+let turnTimerHandle = null;
+let turnTimerSecondsLeft = 60;
+
+function $(id){ return document.getElementById(id); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function randomRoomCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s=''; for(let i=0;i<6;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+/* ================= 認証 ================= */
+let authResolved = false;
+function ensureAuth(){
+  return new Promise((resolve,reject)=>{
+    if(auth.currentUser){ MY_UID = auth.currentUser.uid; resolve(MY_UID); return; }
+    const unsub = auth.onAuthStateChanged(user=>{
+      if(user){
+        MY_UID = user.uid;
+        unsub();
+        resolve(user.uid);
+      }
+    });
+    auth.signInAnonymously().catch(err=>{
+      unsub();
+      reject(err);
+    });
+  });
+}
+
+/* ================= ルーム作成 ================= */
+$('btn-create').addEventListener('click', async ()=>{
+  const name = $('create-name').value.trim();
+  if(!name){ $('title-error').textContent='名前を入力してください'; return; }
+  $('title-error').textContent='';
+  const btn = $('btn-create');
+  btn.disabled = true; const originalText = btn.textContent; btn.textContent='作成中…';
+  try{
+    await ensureAuth();
+    MY_NAME = name;
+    ROOM_CODE = randomRoomCode();
+    IS_HOST = true;
+    roomRef = db.ref('rooms/'+ROOM_CODE);
+
+    const initialPlayers = {};
+    initialPlayers[MY_UID] = {
+      name: MY_NAME, order:0, position:0, money:1500, inJail:false, jailTurns:0,
+      getOutOfJailCards:0, bankrupt:false, connected:true, colorIndex:0
+    };
+
+    await roomRef.set({
+      status:'waiting',
+      createdAt: Date.now(),
+      settings:{
+        hostUid: MY_UID,
+        auctionEnabled:false, houseLimitEnabled:false, doublesRuleEnabled:true,
+        turnTimerEnabled:true, winCondition:'elimination', turnLimitCount:80, startingMoney:1500
+      },
+      players: initialPlayers
+    });
+
+    enterLobby();
+    localStorage.setItem('monopoly_last_room', ROOM_CODE);
+  }catch(err){
+    console.error(err);
+    $('title-error').textContent = 'ルーム作成に失敗しました: '+(err && err.message ? err.message : err);
+  }finally{
+    btn.disabled = false; btn.textContent = originalText;
+  }
+});
+
+/* ================= ルーム参加 ================= */
+$('btn-join').addEventListener('click', async ()=>{
+  const code = $('join-code').value.trim().toUpperCase();
+  const name = $('join-name').value.trim();
+  if(!code || !name){ $('title-error').textContent='ルームコードと名前を入力してください'; return; }
+  $('title-error').textContent='';
+  const btn = $('btn-join');
+  btn.disabled = true; const originalText = btn.textContent; btn.textContent='参加中…';
+  try{
+    await ensureAuth();
+
+    const snap = await db.ref('rooms/'+code).get();
+    if(!snap.exists()){ $('title-error').textContent='そのルームコードは見つかりません'; return; }
+    const data = snap.val();
+    if(data.status!=='waiting'){ $('title-error').textContent='このルームはすでにゲームが開始されています'; return; }
+    const existingPlayers = data.players || {};
+    if(existingPlayers[MY_UID]){
+      // 既に参加済み(再接続) -> そのまま入る
+    } else {
+      const count = Object.keys(existingPlayers).length;
+      if(count>=6){ $('title-error').textContent='このルームは満員です(最大6人)'; return; }
+      await db.ref('rooms/'+code+'/players/'+MY_UID).set({
+        name, order:count, position:0, money:1500, inJail:false, jailTurns:0,
+        getOutOfJailCards:0, bankrupt:false, connected:true, colorIndex:count
+      });
+    }
+    MY_NAME = name;
+    ROOM_CODE = code;
+    roomRef = db.ref('rooms/'+ROOM_CODE);
+    IS_HOST = data.settings.hostUid === MY_UID;
+    enterLobby();
+    localStorage.setItem('monopoly_last_room', ROOM_CODE);
+  }catch(err){
+    console.error(err);
+    $('title-error').textContent = '参加に失敗しました: '+(err && err.message ? err.message : err);
+  }finally{
+    btn.disabled = false; btn.textContent = originalText;
+  }
+});
+
+/* ================= ロビー ================= */
+function enterLobby(){
+  showScreen('screen-lobby');
+  $('lobby-code').textContent = ROOM_CODE;
+  $('lobby-settings-card').style.opacity = IS_HOST ? '1' : '.55';
+  $('lobby-settings-card').style.pointerEvents = IS_HOST ? 'auto' : 'none';
+  $('btn-start-game').style.display = IS_HOST ? 'block' : 'none';
+  listenRoom();
+}
+
+document.querySelectorAll('#lobby-settings-card .switch').forEach(sw=>{
+  sw.addEventListener('click', ()=>{
+    if(!IS_HOST || !roomRef) return;
+    const key = sw.dataset.setting;
+    const current = sw.classList.contains('on');
+    roomRef.child('settings/'+key).set(!current);
+  });
+});
+$('win-condition-select').addEventListener('change', (e)=>{
+  if(!IS_HOST || !roomRef) return;
+  roomRef.child('settings/winCondition').set(e.target.value);
+});
+$('turn-limit-count').addEventListener('change', (e)=>{
+  if(!IS_HOST || !roomRef) return;
+  roomRef.child('settings/turnLimitCount').set(parseInt(e.target.value,10));
+});
+$('starting-money-select').addEventListener('change', (e)=>{
+  if(!IS_HOST || !roomRef) return;
+  roomRef.child('settings/startingMoney').set(parseInt(e.target.value,10));
+});
+
+function renderLobby(){
+  $('lobby-error').textContent = '';
+  const players = roomData.players || {};
+  const list = Object.keys(players).sort((a,b)=>players[a].order-players[b].order);
+  $('lobby-players').innerHTML = list.map(uid=>{
+    const p = players[uid];
+    return `<div class="player-row">
+      <div class="avatar" style="background:${PLAYER_COLORS[p.colorIndex % PLAYER_COLORS.length]}">${p.name[0]}</div>
+      <div>${p.name}${uid===roomData.settings.hostUid?' <span style="color:var(--gold);font-size:11px;">(ホスト)</span>':''}</div>
+    </div>`;
+  }).join('');
+
+  const s = roomData.settings;
+  document.querySelectorAll('#lobby-settings-card .switch').forEach(sw=>{
+    const key = sw.dataset.setting;
+    sw.classList.toggle('on', !!s[key]);
+  });
+  $('win-condition-select').value = s.winCondition;
+  $('turn-limit-count').value = String(s.turnLimitCount||80);
+  $('turn-limit-field').style.display = s.winCondition==='turnLimit' ? 'block':'none';
+  $('starting-money-select').value = String(s.startingMoney||1500);
+}
+
+$('btn-start-game').addEventListener('click', async ()=>{
+  if(!IS_HOST) return;
+  const players = roomData.players || {};
+  const uids = Object.keys(players);
+  if(uids.length<2){ $('lobby-error').textContent='2人以上集まってから開始してください'; return; }
+
+  // シャッフルして手番順を決定(turn/order にまとめて保存する。各プレイヤーのnodeは書き換えない)
+  const shuffled = [...uids].sort(()=>Math.random()-0.5);
+  const updates = {};
+  BOARD.forEach(t=>{
+    if(t.type==='property'||t.type==='railroad'||t.type==='utility'){
+      updates['tiles/'+t.id] = { owner:null, houses:0, hotel:false, mortgaged:false };
+    }
+  });
+  updates['turn/order'] = shuffled;
+  updates['turn/currentUid'] = shuffled[0];
+  updates['turn/phase'] = 'rolling';
+  updates['turn/diceResult'] = null;
+  updates['turn/doublesStreak'] = 0;
+  updates['turn/turnCount'] = 1;
+  updates['status'] = 'playing';
+  updates['log'] = { '0': { message:'【ターン1】ゲームが開始されました', timestamp:Date.now() } };
+
+  await roomRef.update(updates);
+});
+
+/* ================= ルーム購読 ================= */
+let previousRoomStatus = null;
+function listenRoom(){
+  roomRef.on('value', snap=>{
+    const newData = snap.val();
+    if(!newData) return;
+    const justStartedPlaying = previousRoomStatus==='waiting' && newData.status==='playing';
+    roomData = newData;
+    if(roomData.status==='waiting'){
+      showScreen('screen-lobby');
+      renderLobby();
+    } else if(roomData.status==='playing'){
+      if(justStartedPlaying && myPlayer()){
+        const startMoney = roomData.settings.startingMoney || 1500;
+        if(myPlayer().money !== startMoney){
+          roomRef.child('players/'+MY_UID+'/money').set(startMoney);
+        }
+      }
+      showScreen('screen-game');
+      renderGame();
+    } else if(roomData.status==='finished'){
+      showScreen('screen-end');
+      renderEndScreen();
+    }
+    previousRoomStatus = roomData.status;
+  });
+}
+
+/* ================= ゲーム描画 ================= */
+function myPlayer(){ return roomData.players[MY_UID]; }
+function isMyTurn(){ return roomData.turn && roomData.turn.currentUid===MY_UID; }
+function playerOrder(){
+  if(roomData.turn && roomData.turn.order) return roomData.turn.order;
+  return Object.keys(roomData.players).sort((a,b)=>roomData.players[a].order-roomData.players[b].order);
+}
+
+function renderGame(){
+  $('game-code').textContent = ROOM_CODE;
+  $('game-status').textContent = roomData.status==='playing' ? 'プレイ中' : '';
+
+  const players = roomData.players;
+  const turn = roomData.turn || {};
+  const currentP = players[turn.currentUid];
+  $('turn-player-name').textContent = currentP ? currentP.name : '-';
+  $('turn-player-location').textContent = currentP ? BOARD[currentP.position].name : '-';
+  $('turn-count-badge').textContent = 'ターン'+(turn.turnCount||1);
+
+  // プレイヤーカード
+  const order = playerOrder();
+  order.forEach(uid=>{
+    const p = players[uid];
+    const prev = lastMoneyByUid[uid];
+    if(prev !== undefined && p.money !== prev){
+      moneyDeltaByUid[uid] = { delta: p.money - prev, expiresAt: Date.now()+4500 };
+      setTimeout(()=>{ if(roomData && roomData.status==='playing') renderGame(); }, 4600);
+    }
+    lastMoneyByUid[uid] = p.money;
+  });
+  $('players-scroll').innerHTML = order.map(uid=>{
+    const p = players[uid];
+    const color = PLAYER_COLORS[p.colorIndex % PLAYER_COLORS.length];
+    const propCount = Object.values(roomData.tiles||{}).filter(t=>t.owner===uid).length;
+    const deltaInfo = moneyDeltaByUid[uid];
+    let deltaHtml = '';
+    if(deltaInfo && Date.now() < deltaInfo.expiresAt){
+      const positive = deltaInfo.delta>0;
+      const deltaColor = positive ? '#1F7A3D' : '#C0392B';
+      deltaHtml = `<span style="color:${deltaColor};font-weight:700;font-size:11px;margin-left:6px;">${positive?'+':''}${deltaInfo.delta.toLocaleString()}</span>`;
+    }
+    return `<div class="player-card ${uid===turn.currentUid?'current':''} ${p.bankrupt?'bankrupt':''}">
+      <div class="pname"><span class="dot" style="background:${color}"></span>${p.name}</div>
+      <div class="pmoney">¥${p.money.toLocaleString()}${deltaHtml}</div>
+      <div class="pmeta">物件 ${propCount}件 ${p.inJail?'/ 服役中':''} ${p.bankrupt?'/ 破産':''}</div>
+    </div>`;
+  }).join('');
+
+  // 盤面
+  $('board').innerHTML = BOARD.map(t=>{
+    const tileState = (roomData.tiles||{})[t.id];
+    const isSpecial = !(t.type==='property'||t.type==='railroad'||t.type==='utility');
+    const tokensHere = order.filter(uid=>players[uid].position===t.id && !players[uid].bankrupt);
+    const tokensHtml = tokensHere.map(uid=>{
+      const p = players[uid];
+      return `<div class="token" style="background:${PLAYER_COLORS[p.colorIndex % PLAYER_COLORS.length]}">${p.name}</div>`;
+    }).join('');
+    const chip = t.group ? `<div class="group-chip" style="background:${GROUP_COLOR[t.group]}"></div>` : '';
+    let ownerBadge = '';
+    let stationStyle = '';
+    if(tileState && tileState.owner && players[tileState.owner]){
+      const ownerP = players[tileState.owner];
+      const ownerColor = PLAYER_COLORS[ownerP.colorIndex % PLAYER_COLORS.length];
+      const badgeLabel = tileState.owner===MY_UID ? `${ownerP.name}(自分)` : ownerP.name;
+      ownerBadge = `<div class="owner-badge" style="background:${ownerColor}">${badgeLabel}</div>`;
+      stationStyle = ` style="border-color:${ownerColor}"`;
+    }
+    let meta = '';
+    if(t.type==='property'){
+      let currentRent = t.baseRent;
+      let buildLabel = '';
+      if(tileState && tileState.owner){
+        const groupTiles = BOARD.filter(b=>b.type==='property' && b.group===t.group);
+        const hasMonopoly = groupTiles.every(b=> roomData.tiles[b.id] && roomData.tiles[b.id].owner===tileState.owner);
+        if(tileState.hotel){ currentRent = t.baseRent*16; buildLabel = ' ・ ホテル'; }
+        else if((tileState.houses||0)>0){ currentRent = t.baseRent*(2+tileState.houses*2); buildLabel = ` ・ 家${tileState.houses}軒`; }
+        else if(hasMonopoly){ currentRent = t.baseRent*2; buildLabel = ' ・ 独占中'; }
+        if(tileState.mortgaged){ buildLabel += ' ・ 抵当中'; }
+      }
+      meta = `¥${t.price} ・ 家賃¥${currentRent}${buildLabel}`;
+    }
+    else if(t.type==='railroad') meta = `¥${t.price} ・ 新幹線${tileState && tileState.mortgaged ? ' ・ 抵当中' : ''}`;
+    else if(t.type==='utility') meta = `¥${t.price} ・ 公共施設${tileState && tileState.mortgaged ? ' ・ 抵当中' : ''}`;
+    else if(t.type==='tax') meta = `支払い ¥${t.amount}`;
+    else if(t.type==='chance') meta = 'チャンスカード';
+    else if(t.type==='chest') meta = '共同募金カード';
+    else if(t.type==='go') meta = '通過でボーナス¥200';
+    else if(t.type==='jailVisit') meta = 'ただの通過点(何も起こりません)';
+    else if(t.type==='goToJail') meta = 'ここに止まると刑務所送りになります';
+    return `<div class="tile ${isSpecial?'special':''}" data-tile-id="${t.id}">
+      <div class="station"${stationStyle}></div>
+      ${chip}
+      <div class="info">
+        ${ownerBadge}
+        <div class="tname">${t.name}</div>
+        <div class="tmeta">${meta}</div>
+        <div class="tokens">${tokensHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // タイマー表示
+  const timerOn = roomData.settings.turnTimerEnabled;
+  $('timer-badge').classList.toggle('hidden', !timerOn);
+
+  // 観戦バナー・トレードボタンの表示切替
+  const me = myPlayer();
+  $('spectator-banner').classList.toggle('hidden', !(me && me.bankrupt));
+  $('btn-open-trade').classList.toggle('hidden', !!(me && me.bankrupt));
+  renderTradeInbox();
+
+  renderActionSlot();
+  renderLog();
+  renderStatusBanner();
+  handleTurnTimer();
+  autoScrollToMyTile();
+}
+
+/* ================= 盤面の自動スクロール ================= */
+let lastKnownMyPosition = null;
+let lastMoneyByUid = {};
+let moneyDeltaByUid = {};
+function autoScrollToMyTile(){
+  const me = myPlayer();
+  if(!me) return;
+  if(lastKnownMyPosition === me.position) return; // 位置が変わっていなければ何もしない(手動スクロールを尊重)
+  lastKnownMyPosition = me.position;
+  requestAnimationFrame(()=>{
+    const el = document.querySelector('.tile[data-tile-id="'+me.position+'"]');
+    if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); }
+  });
+}
+
+function renderLog(){
+  const log = roomData.log || {};
+  const keys = Object.keys(log).sort((a,b)=>log[b].timestamp-log[a].timestamp);
+  $('log-box').innerHTML = keys.slice(0,50).map(k=>`<div>${log[k].message}</div>`).join('') || '<div>まだログはありません</div>';
+}
+
+function renderStatusBanner(){
+  const log = roomData.log || {};
+  const keys = Object.keys(log);
+  const banner = $('status-banner');
+  if(keys.length===0){ banner.textContent=''; return; }
+  const latestKey = keys.sort((a,b)=>log[b].timestamp-log[a].timestamp)[0];
+  banner.textContent = log[latestKey].message.replace(/^【ターン\d+】/,'');
+}
+
+function pushLog(message){
+  const turnNum = (roomData && roomData.turn && roomData.turn.turnCount) || 1;
+  const logRef = roomRef.child('log').push();
+  logRef.set({ message: `【ターン${turnNum}】${message}`, timestamp: Date.now() });
+  // 直近50件だけ残す軽量化
+  roomRef.child('log').get().then(snap=>{
+    const val = snap.val()||{};
+    const keys = Object.keys(val).sort((a,b)=>val[a].timestamp-val[b].timestamp);
+    if(keys.length>50){
+      const removeKeys = keys.slice(0, keys.length-50);
+      const updates = {};
+      removeKeys.forEach(k=>updates[k]=null);
+      roomRef.child('log').update(updates);
+    }
+  });
+}
+
+/* ================= アクションパネル ================= */
+function renderActionSlot(){
+  const slot = $('action-slot');
+  const turn = roomData.turn;
+  if(turn.phase==='auction'){
+    renderAuctionPanel();
+    return;
+  }
+  if(!isMyTurn()){
+    slot.innerHTML = `<div class="card" style="text-align:center;color:var(--ink-soft);font-size:13px;">
+      ${roomData.players[turn.currentUid] ? roomData.players[turn.currentUid].name : ''} さんのターンです…</div>`;
+    return;
+  }
+  if(myPlayer().inJail && turn.phase==='rolling'){
+    renderJailPanel();
+    return;
+  }
+  if(turn.phase==='rolling'){
+    slot.innerHTML = `<button class="btn btn-primary" id="btn-roll">🎲 サイコロを振る</button>`;
+    $('btn-roll').addEventListener('click', doRollDice);
+  } else if(turn.phase==='buy-decision'){
+    const tile = BOARD[myPlayer().position];
+    slot.innerHTML = `<div class="card">
+      <div style="font-size:13px;margin-bottom:10px;"><b>${tile.name}</b> は誰も所有していません。購入しますか?(¥${tile.price})</div>
+      <div class="grid">
+        <button class="btn btn-gold" id="btn-buy">購入する</button>
+        <button class="btn btn-ghost" id="btn-pass">見送る</button>
+      </div>
+    </div>`;
+    $('btn-buy').addEventListener('click', doBuy);
+    $('btn-pass').addEventListener('click', doPass);
+  } else if(turn.phase==='resolved'){
+    slot.innerHTML = `<button class="btn btn-primary" id="btn-endturn">ターンを終える</button>`;
+    $('btn-endturn').addEventListener('click', ()=>advanceTurn());
+  } else {
+    slot.innerHTML = '';
+  }
+}
+
+/* ================= ターンタイマー ================= */
+function handleTurnTimer(){
+  clearInterval(turnTimerHandle);
+  $('timer-badge').textContent = '60';
+  if(!roomData.settings.turnTimerEnabled) return;
+  if(roomData.turn.phase==='auction') return; // オークション中は自動スキップさせない
+  if(!isMyTurn()) return;
+  turnTimerSecondsLeft = 60;
+  turnTimerHandle = setInterval(()=>{
+    turnTimerSecondsLeft--;
+    $('timer-badge').textContent = String(Math.max(turnTimerSecondsLeft,0));
+    if(turnTimerSecondsLeft<=0){
+      clearInterval(turnTimerHandle);
+      pushLog(`${myPlayer().name} さんは時間切れのためターンがスキップされました`);
+      const turn = roomData.turn;
+      if(turn.phase==='buy-decision') doPass();
+      else if(turn.phase!=='auction') advanceTurn();
+    }
+  },1000);
+}
+
+/* ================= サイコロ・移動 ================= */
+function doRollDice(){
+  const p = myPlayer();
+  if(!p){
+    alert('自分のプレイヤー情報が取得できませんでした。ページを再読み込みしてください。');
+    console.error('doRollDice: myPlayer() is undefined. MY_UID=', MY_UID);
+    return;
+  }
+  const d1 = 1+Math.floor(Math.random()*6);
+  const d2 = 1+Math.floor(Math.random()*6);
+  const isDouble = d1===d2;
+  const sum = d1+d2;
+  pushLog(`${p.name} さんの出目は ${d1}と${d2}(合計${sum})でした`);
+  let newPos = (p.position + sum) % 40;
+  const passedGo = (p.position + sum) >= 40;
+  let newMoney = p.money + (passedGo ? 200 : 0);
+
+  const updates = {};
+  updates['players/'+MY_UID+'/position'] = newPos;
+  updates['players/'+MY_UID+'/money'] = newMoney;
+  updates['turn/diceResult'] = [d1,d2];
+
+  let doublesStreak = (roomData.turn.doublesStreak||0);
+  if(roomData.settings.doublesRuleEnabled && isDouble) doublesStreak++; else doublesStreak = 0;
+  updates['turn/doublesStreak'] = doublesStreak;
+
+  if(passedGo) pushLog(`${p.name} さんがGOを通過し¥200を受け取りました`);
+
+  if(roomData.settings.doublesRuleEnabled && doublesStreak>=3){
+    // 3連続ゾロ目 -> 刑務所へ
+    updates['players/'+MY_UID+'/position'] = 10;
+    updates['players/'+MY_UID+'/inJail'] = true;
+    updates['turn/phase'] = 'resolved';
+    roomRef.update(updates).then(()=>{
+      pushLog(`${p.name} さんは3連続ゾロ目のため刑務所へ送られました`);
+    }).catch(err=>{
+      console.error('doRollDice(3連続ゾロ目)の書き込みに失敗:', err);
+      alert('通信エラーが発生しました。もう一度お試しください。エラー: '+err.message);
+    });
+    return;
+  }
+
+  roomRef.update(updates).then(()=>{
+    resolveTile(newPos, isDouble && roomData.settings.doublesRuleEnabled);
+  }).catch(err=>{
+    console.error('doRollDiceの書き込みに失敗しました:', err);
+    alert('通信エラーによりサイコロの結果を反映できませんでした。もう一度「サイコロを振る」を試すか、ページを再読み込みしてください。エラー: '+err.message);
+  });
+}
+
+function resolveTile(pos, canRollAgain, opts){
+  opts = opts || {};
+  const tile = BOARD[pos];
+  const tileState = (roomData.tiles||{})[pos];
+  const p = myPlayer();
+
+  if(tile.type==='property' || tile.type==='railroad' || tile.type==='utility'){
+    if(!tileState || !tileState.owner){
+      pushLog(`${p.name} さんは ${tile.name} に着きました(未購入)`);
+      roomRef.child('turn/phase').set('buy-decision');
+      return;
+    } else if(tileState.owner===MY_UID){
+      pushLog(`${p.name} さんは自分の所有地(${tile.name})に止まりました`);
+      finishResolve(canRollAgain);
+    } else if(tileState.mortgaged){
+      pushLog(`${p.name} さんは ${tile.name} に止まりましたが、抵当中のため家賃は発生しません`);
+      finishResolve(canRollAgain);
+    } else {
+      const rent = calcRent(tile, tileState, roomData.turn.diceResult, opts);
+      const ownerUid = tileState.owner;
+      payMoney(MY_UID, rent, tile.name+'の家賃').then(bankrupt=>{
+        if(bankrupt){ finishResolve(canRollAgain); return; }
+        const owner = roomData.players[ownerUid];
+        roomRef.update({['players/'+ownerUid+'/money']: owner.money + rent}).then(()=>{
+          pushLog(`${p.name} さんは ${tile.name} で ${owner.name} さんに家賃¥${rent}を支払いました`);
+          finishResolve(canRollAgain);
+        }).catch(err=>{
+          console.error('家賃の入金処理に失敗:', err);
+          alert('通信エラーが発生しました。もう一度お試しください。');
+          finishResolve(canRollAgain);
+        });
+      }).catch(err=>{
+        console.error('payMoney(家賃)に失敗:', err);
+        alert('通信エラーが発生しました。もう一度お試しください。');
+        finishResolve(canRollAgain);
+      });
+    }
+  } else if(tile.type==='tax'){
+    payMoney(MY_UID, tile.amount, tile.name).then(bankrupt=>{
+      if(!bankrupt) pushLog(`${p.name} さんは${tile.name}として¥${tile.amount}を支払いました`);
+      finishResolve(canRollAgain);
+    }).catch(err=>{
+      console.error('payMoney(税金)に失敗:', err);
+      alert('通信エラーが発生しました。もう一度お試しください。');
+      finishResolve(canRollAgain);
+    });
+  } else if(tile.type==='goToJail'){
+    const updates = {};
+    updates['players/'+MY_UID+'/position'] = 10;
+    updates['players/'+MY_UID+'/inJail'] = true;
+    updates['players/'+MY_UID+'/jailTurns'] = 0;
+    roomRef.update(updates).then(()=>{
+      pushLog(`${p.name} さんは刑務所へ送られました`);
+      finishResolve(false);
+    }).catch(err=>{
+      console.error('刑務所送りの処理に失敗:', err);
+      alert('通信エラーが発生しました。もう一度お試しください。');
+      finishResolve(false);
+    });
+  } else if(tile.type==='chance'){
+    resolveChanceOrChest('chance', canRollAgain);
+  } else if(tile.type==='chest'){
+    resolveChanceOrChest('chest', canRollAgain);
+  } else {
+    pushLog(`${p.name} さんは ${tile.name} に止まりました`);
+    finishResolve(canRollAgain);
+  }
+}
+
+function finishResolve(canRollAgain){
+  if(canRollAgain){
+    pushLog(`${myPlayer().name} さんはゾロ目なのでもう一度サイコロを振れます`);
+    roomRef.child('turn/phase').set('rolling');
+  } else {
+    roomRef.child('turn/phase').set('resolved');
+  }
+}
+
+function calcRent(tile, tileState, diceResult, opts){
+  opts = opts || {};
+  if(tile.type==='railroad'){
+    const ownerUid = tileState.owner;
+    let railCount = 0;
+    BOARD.forEach(b=>{ if(b.type==='railroad' && roomData.tiles[b.id] && roomData.tiles[b.id].owner===ownerUid) railCount++; });
+    const base = RAIL_RENT[railCount] || 25;
+    return opts.rentMultiplier ? base*opts.rentMultiplier : base;
+  }
+  if(tile.type==='utility'){
+    const ownerUid = tileState.owner;
+    let utilCount = 0;
+    BOARD.forEach(b=>{ if(b.type==='utility' && roomData.tiles[b.id] && roomData.tiles[b.id].owner===ownerUid) utilCount++; });
+    const diceSum = (diceResult||[1,1])[0]+(diceResult||[1,1])[1];
+    if(opts.fixedUtilityMultiplier) return diceSum * opts.fixedUtilityMultiplier;
+    return diceSum * (utilCount>=2 ? 10 : 4);
+  }
+  // property
+  const ownerUid = tileState.owner;
+  const groupTiles = BOARD.filter(b=>b.type==='property' && b.group===tile.group);
+  const hasMonopoly = groupTiles.every(b=>roomData.tiles[b.id] && roomData.tiles[b.id].owner===ownerUid);
+  const houses = tileState.houses||0;
+  if(tileState.hotel) return tile.baseRent*16;
+  if(houses===0) return hasMonopoly ? tile.baseRent*2 : tile.baseRent;
+  return tile.baseRent*(2+houses*2);
+}
+
+/* ================= 購入/見送り ================= */
+function doBuy(){
+  const p = myPlayer();
+  const tile = BOARD[p.position];
+  if(p.money < tile.price){
+    pushLog(`${p.name} さんは資金不足のため ${tile.name} を購入できませんでした`);
+    roomRef.child('turn/phase').set('resolved');
+    return;
+  }
+  const updates = {};
+  updates['players/'+MY_UID+'/money'] = p.money - tile.price;
+  updates['tiles/'+tile.id+'/owner'] = MY_UID;
+  updates['turn/phase'] = 'resolved';
+  roomRef.update(updates).then(()=>{
+    pushLog(`${p.name} さんが ${tile.name} を¥${tile.price}で購入しました`);
+  });
+}
+function doPass(){
+  const p = myPlayer();
+  const tile = BOARD[p.position];
+  if(roomData.settings.auctionEnabled){
+    pushLog(`${p.name} さんは ${tile.name} の購入を見送りました。オークションを開始します`);
+    startAuction();
+  } else {
+    pushLog(`${p.name} さんは ${tile.name} の購入を見送りました`);
+    roomRef.child('turn/phase').set('resolved');
+  }
+}
+
+/* ================= ターン送り ================= */
+function advanceTurn(){
+  const players = roomData.players;
+  const order = playerOrder();
+  const curIdx = order.indexOf(roomData.turn.currentUid);
+  let nextIdx = curIdx;
+  for(let i=1;i<=order.length;i++){
+    const cand = (curIdx+i)%order.length;
+    if(!players[order[cand]].bankrupt){ nextIdx = cand; break; }
+  }
+  const nextUid = order[nextIdx];
+  const newTurnCount = (roomData.turn.turnCount||0)+1;
+
+  if(roomData.settings.winCondition==='turnLimit'){
+    const limit = roomData.settings.turnLimitCount||80;
+    if(newTurnCount>limit){
+      let bestUid=null, bestValue=-1;
+      order.forEach(uid=>{
+        if(players[uid].bankrupt) return;
+        let value = players[uid].money;
+        BOARD.forEach(t=>{
+          const ts = roomData.tiles[t.id];
+          if((t.type==='property'||t.type==='railroad'||t.type==='utility') && ts && ts.owner===uid) value += t.price;
+        });
+        if(value>bestValue){ bestValue=value; bestUid=uid; }
+      });
+      roomRef.update({status:'finished', winnerUid:bestUid}).then(()=>{
+        pushLog(`規定ターン数に達しました。資産最大の ${players[bestUid].name} さんの勝利です!`);
+      });
+      return;
+    }
+  }
+
+  roomRef.update({
+    'turn/currentUid': nextUid,
+    'turn/phase': 'rolling',
+    'turn/diceResult': null,
+    'turn/doublesStreak': 0,
+    'turn/turnCount': newTurnCount
+  });
+}
+
+/* ================= モーダル共通 ================= */
+function openModal(html){
+  $('modal-content').innerHTML = html;
+  $('modal-back').classList.remove('hidden');
+}
+function closeModal(){
+  $('modal-back').classList.add('hidden');
+  $('modal-content').innerHTML = '';
+}
+$('modal-back').addEventListener('click', (e)=>{ if(e.target.id==='modal-back') closeModal(); });
+
+/* ================= チャンス/共同募金カード ================= */
+const CHANCE_CARDS = [
+  {text:'「東京」まで進もう。GOを通過したものとしてボーナスも受け取れる。', effect:{type:'moveTo', tileId:39, forceGoBonus:true}},
+  {text:'最寄りの新幹線駅まで進む。オーナーがいる場合は通行料が2倍になる。', effect:{type:'moveToNearestRailroad', rentMultiplier:2}},
+  {text:'もう一つ先の新幹線駅まで進む。オーナーがいる場合は通行料が2倍になる。', effect:{type:'moveToNearestRailroad', rentMultiplier:2, skip:1}},
+  {text:'最寄りの公共施設まで進む。通行料はサイコロの出目×10倍になる。', effect:{type:'moveToNearestUtility', fixedMultiplier:10}},
+  {text:'3マス戻る。', effect:{type:'moveRelative', steps:-3}},
+  {text:'刑務所へ行く。GOは通過しない。', effect:{type:'goToJail'}},
+  {text:'建物修繕費として、一戸建て1軒につき¥25、ホテル1軒につき¥100を支払う。', effect:{type:'payPerHouse', perHouse:25, perHotel:100}},
+  {text:'「刑務所から出られるカード」を手に入れた。', effect:{type:'getOutOfJailCard'}},
+  {text:'臨時収入!全員から¥50ずつ受け取る。', effect:{type:'collectFromAll', amount:50}},
+  {text:'出張手当として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'銀行の配当として¥50を受け取る。', effect:{type:'collect', amount:50}},
+  {text:'罰金として¥15を支払う。', effect:{type:'pay', amount:15}},
+  {text:'学費として¥150を支払う。', effect:{type:'pay', amount:150}},
+  {text:'株の売却益として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'ふるさと納税として、全プレイヤーに¥10ずつ支払う。', effect:{type:'payToAll', amount:10}},
+  {text:'GOに戻る。ボーナスも受け取れる。', effect:{type:'moveTo', tileId:0, forceGoBonus:true}},
+];
+const CHEST_CARDS = [
+  {text:'GOに戻る。ボーナスも受け取れる。', effect:{type:'moveTo', tileId:0, forceGoBonus:true}},
+  {text:'誕生日!全員から¥10ずつ受け取る。', effect:{type:'collectFromAll', amount:10}},
+  {text:'医療費として¥50を支払う。', effect:{type:'pay', amount:50}},
+  {text:'所得税還付として¥20を受け取る。', effect:{type:'collect', amount:20}},
+  {text:'保険金として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'刑務所へ行く。GOは通過しない。', effect:{type:'goToJail'}},
+  {text:'「刑務所から出られるカード」を手に入れた。', effect:{type:'getOutOfJailCard'}},
+  {text:'相続として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'修繕費請求として、一戸建て1軒につき¥40、ホテル1軒につき¥115を支払う。', effect:{type:'payPerHouse', perHouse:40, perHotel:115}},
+  {text:'学資保険満期として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'罰金を納付する。¥50を支払う。', effect:{type:'pay', amount:50}},
+  {text:'寄付金として、全員から¥50ずつ受け取る。', effect:{type:'collectFromAll', amount:50}},
+  {text:'税金の還付として¥20を受け取る。', effect:{type:'collect', amount:20}},
+  {text:'コンテスト優勝として¥100を受け取る。', effect:{type:'collect', amount:100}},
+  {text:'満期預金として¥25を受け取る。', effect:{type:'collect', amount:25}},
+  {text:'お祝い金として¥100を受け取る。', effect:{type:'collect', amount:100}},
+];
+function shuffleIndices(n){
+  const arr = Array.from({length:n},(_,i)=>i);
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+function drawCard(deckName){
+  const cards = deckName==='chance' ? CHANCE_CARDS : CHEST_CARDS;
+  let deck = (roomData.cardDecks && roomData.cardDecks[deckName]) || shuffleIndices(cards.length);
+  let idx = (roomData.cardDecks && roomData.cardDecks[deckName+'Index']) || 0;
+  if(idx>=deck.length){ deck = shuffleIndices(cards.length); idx=0; }
+  const cardIdx = deck[idx];
+  idx++;
+  const updates = {};
+  updates['cardDecks/'+deckName] = deck;
+  updates['cardDecks/'+deckName+'Index'] = idx;
+  roomRef.update(updates);
+  return cards[cardIdx];
+}
+function resolveChanceOrChest(deckName, canRollAgain){
+  const p = myPlayer();
+  const card = drawCard(deckName);
+  pushLog(`${p.name} さんは${deckName==='chance'?'チャンス':'共同募金'}カードを引きました:「${card.text}」`);
+  applyCardEffect(card, canRollAgain);
+}
+function applyCardEffect(card, canRollAgain){
+  canRollAgain = canRollAgain || false;
+  const p = myPlayer();
+  const eff = card.effect;
+  const updates = {};
+  if(eff.type==='moveTo'){
+    const dest = eff.tileId;
+    const passedGo = eff.forceGoBonus || (dest < p.position);
+    updates['players/'+MY_UID+'/position'] = dest;
+    if(passedGo) updates['players/'+MY_UID+'/money'] = p.money + 200;
+    roomRef.update(updates).then(()=>{
+      if(passedGo) pushLog(`${p.name} さんはGOのボーナス¥200を受け取りました`);
+      resolveTile(dest, canRollAgain);
+    });
+  } else if(eff.type==='moveRelative'){
+    const dest = (p.position + eff.steps + 40) % 40;
+    updates['players/'+MY_UID+'/position'] = dest;
+    roomRef.update(updates).then(()=> resolveTile(dest, canRollAgain));
+  } else if(eff.type==='moveToNearestRailroad' || eff.type==='moveToNearestUtility'){
+    const kind = eff.type==='moveToNearestRailroad' ? 'railroad' : 'utility';
+    const candidates = BOARD.filter(t=>t.type===kind).map(t=>t.id);
+    let dest = candidates.find(id=>id>p.position);
+    if(dest===undefined) dest = candidates[0];
+    if(eff.skip){ const idx = candidates.indexOf(dest); dest = candidates[(idx+1)%candidates.length]; }
+    const passedGo = dest < p.position;
+    updates['players/'+MY_UID+'/position'] = dest;
+    if(passedGo) updates['players/'+MY_UID+'/money'] = p.money + 200;
+    roomRef.update(updates).then(()=>{
+      if(passedGo) pushLog(`${p.name} さんはGOのボーナス¥200を受け取りました`);
+      resolveTile(dest, canRollAgain, {rentMultiplier:eff.rentMultiplier, fixedUtilityMultiplier:eff.fixedMultiplier});
+    });
+  } else if(eff.type==='goToJail'){
+    roomRef.update({['players/'+MY_UID+'/position']:10,['players/'+MY_UID+'/inJail']:true,['players/'+MY_UID+'/jailTurns']:0}).then(()=>{
+      pushLog(`${p.name} さんは刑務所へ送られました`);
+      finishResolve(false);
+    });
+  } else if(eff.type==='payPerHouse'){
+    let houseCount=0, hotelCount=0;
+    Object.values(roomData.tiles||{}).forEach(t=>{ if(t.owner===MY_UID){ if(t.hotel) hotelCount++; else houseCount+=(t.houses||0); }});
+    const amount = houseCount*eff.perHouse + hotelCount*eff.perHotel;
+    if(amount===0){ finishResolve(canRollAgain); return; }
+    payMoney(MY_UID, amount, '修繕費').then(bankrupt=>{
+      if(!bankrupt) pushLog(`${p.name} さんは修繕費¥${amount}を支払いました`);
+      finishResolve(bankrupt ? false : canRollAgain);
+    });
+  } else if(eff.type==='getOutOfJailCard'){
+    updates['players/'+MY_UID+'/getOutOfJailCards'] = (p.getOutOfJailCards||0)+1;
+    roomRef.update(updates).then(()=> finishResolve(canRollAgain));
+  } else if(eff.type==='collect'){
+    updates['players/'+MY_UID+'/money'] = p.money + eff.amount;
+    roomRef.update(updates).then(()=>{ pushLog(`${p.name} さんは¥${eff.amount}を受け取りました`); finishResolve(canRollAgain); });
+  } else if(eff.type==='pay'){
+    payMoney(MY_UID, eff.amount, 'カードの支払い').then(bankrupt=>{
+      if(!bankrupt) pushLog(`${p.name} さんは¥${eff.amount}を支払いました`);
+      finishResolve(bankrupt ? false : canRollAgain);
+    });
+  } else if(eff.type==='collectFromAll'){
+    const players = roomData.players;
+    let total = 0;
+    const upd = {};
+    Object.keys(players).forEach(uid=>{
+      if(uid===MY_UID || players[uid].bankrupt) return;
+      const pay = Math.min(eff.amount, players[uid].money);
+      upd['players/'+uid+'/money'] = players[uid].money - pay;
+      total += pay;
+    });
+    upd['players/'+MY_UID+'/money'] = p.money + total;
+    roomRef.update(upd).then(()=>{ pushLog(`${p.name} さんは全員から合計¥${total}を受け取りました`); finishResolve(canRollAgain); });
+  } else if(eff.type==='payToAll'){
+    const players = roomData.players;
+    const alive = Object.keys(players).filter(uid=>uid!==MY_UID && !players[uid].bankrupt);
+    const total = eff.amount * alive.length;
+    if(p.money < total){
+      payMoney(MY_UID, total, '全員への支払い').then(()=> finishResolve(false));
+      return;
+    }
+    const upd = { ['players/'+MY_UID+'/money']: p.money - total };
+    alive.forEach(uid=>{ upd['players/'+uid+'/money'] = players[uid].money + eff.amount; });
+    roomRef.update(upd).then(()=>{ pushLog(`${p.name} さんは全員に合計¥${total}を支払いました`); finishResolve(canRollAgain); });
+  } else {
+    finishResolve(canRollAgain);
+  }
+}
+
+/* ================= 破産処理 ================= */
+function doBankrupt(uid, reason){
+  const player = roomData.players[uid];
+  const updates = {};
+  updates['players/'+uid+'/money'] = 0;
+  updates['players/'+uid+'/bankrupt'] = true;
+  BOARD.forEach(t=>{
+    if(t.type==='property'||t.type==='railroad'||t.type==='utility'){
+      const ts = roomData.tiles[t.id];
+      if(ts && ts.owner===uid){
+        updates['tiles/'+t.id+'/owner'] = null;
+        updates['tiles/'+t.id+'/houses'] = 0;
+        updates['tiles/'+t.id+'/hotel'] = false;
+        updates['tiles/'+t.id+'/mortgaged'] = false;
+      }
+    }
+  });
+  return roomRef.update(updates).then(()=>{
+    pushLog(`💥 ${player.name} さんは${reason}が支払えず破産しました。所有していた物件は銀行に戻りました`);
+    return checkWinCondition();
+  });
+}
+
+function payMoney(uid, amount, reason){
+  return new Promise(resolve=>{
+    const player = roomData.players[uid];
+    if(player.money >= amount){
+      roomRef.update({['players/'+uid+'/money']: player.money-amount}).then(()=> resolve(false)).catch(err=>{
+        console.error('payMoney書き込み失敗:', err);
+        alert('通信エラーが発生しました。もう一度お試しください。');
+        resolve(false);
+      });
+      return;
+    }
+    if(uid !== MY_UID){
+      // 想定外だが念のため:自分以外の不足はその場で破産処理
+      doBankrupt(uid, reason).then(()=> resolve(true));
+      return;
+    }
+    const mortgageable = BOARD.filter(t=>{
+      const ts = roomData.tiles[t.id];
+      return ts && ts.owner===MY_UID && !ts.mortgaged && !ts.hotel && !(ts.houses>0) &&
+        (t.type==='property'||t.type==='railroad'||t.type==='utility');
+    });
+    const maxRaisable = mortgageable.reduce((sum,t)=>sum+Math.floor(t.price/2),0);
+    if(mortgageable.length===0 || (player.money+maxRaisable) < amount){
+      doBankrupt(MY_UID, reason).then(()=> resolve(true));
+      return;
+    }
+    openEmergencyMortgageModal(amount, reason, mortgageable, resolve);
+  });
+}
+
+function openEmergencyMortgageModal(amountNeeded, reason, tiles, resolveCallback){
+  const shortfall = amountNeeded - myPlayer().money;
+  let html = `<h3>⚠️ 資金不足</h3>
+    <div style="font-size:13px;margin-bottom:10px;">${reason}として¥${amountNeeded}が必要ですが、所持金(¥${myPlayer().money})だけでは足りません。下から物件を選んで抵当に入れ、不足分を補ってください。</div>
+    <div style="background:#FBF3DC;border:2px solid var(--gold);border-radius:12px;padding:12px;text-align:center;margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--ink-soft);">不足額</div>
+      <div style="font-size:26px;font-weight:900;color:var(--danger);">¥${shortfall}</div>
+      <div id="emg-total" style="font-size:14px;font-weight:700;margin-top:6px;"></div>
+    </div>`;
+  tiles.forEach(t=>{
+    const val = Math.floor(t.price/2);
+    html += `<label class="trade-card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span><input type="checkbox" data-mval="${val}" data-tid="${t.id}"> ${t.name}</span>
+      <span>+¥${val}</span>
+    </label>`;
+  });
+  html += `<button class="btn btn-gold" style="margin-top:10px;" id="btn-emg-confirm" disabled>選択した物件を抵当に入れて支払う</button>
+    <button class="btn btn-ghost" style="margin-top:8px;" id="btn-emg-giveup">これ以上抵当に入れず破産する</button>`;
+  openModal(html);
+  const checkboxes = Array.from($('modal-content').querySelectorAll('input[type=checkbox]'));
+  function updateTotal(){
+    const total = checkboxes.filter(c=>c.checked).reduce((s,c)=>s+parseInt(c.dataset.mval,10),0);
+    const remaining = shortfall - total;
+    $('emg-total').textContent = remaining>0 ? `確保額 ¥${total}(あと¥${remaining}足りません)` : `確保額 ¥${total}(不足を解消できます)`;
+    $('emg-total').style.color = remaining>0 ? 'var(--danger)' : 'var(--safe)';
+    $('btn-emg-confirm').disabled = total < shortfall;
+  }
+  checkboxes.forEach(c=>c.addEventListener('change', updateTotal));
+  updateTotal();
+  $('btn-emg-confirm').addEventListener('click', ()=>{
+    const selected = checkboxes.filter(c=>c.checked);
+    const updates = {};
+    let raised = 0;
+    selected.forEach(c=>{
+      const tid = parseInt(c.dataset.tid,10);
+      updates['tiles/'+tid+'/mortgaged'] = true;
+      raised += parseInt(c.dataset.mval,10);
+    });
+    const p = myPlayer();
+    updates['players/'+MY_UID+'/money'] = p.money + raised - amountNeeded;
+    roomRef.update(updates).then(()=>{
+      pushLog(`${p.name} さんは物件を抵当に入れて¥${raised}を確保し、${reason}を支払いました`);
+      closeModal();
+      resolveCallback(false);
+    });
+  });
+  $('btn-emg-giveup').addEventListener('click', ()=>{
+    closeModal();
+    doBankrupt(MY_UID, reason).then(()=> resolveCallback(true));
+  });
+}
+
+function checkWinCondition(){
+  const players = roomData.players;
+  const alive = Object.keys(players).filter(uid=>!players[uid].bankrupt);
+  if(alive.length<=1 && roomData.status==='playing'){
+    const winnerUid = alive[0] || null;
+    return roomRef.update({status:'finished', winnerUid: winnerUid}).then(()=>{
+      pushLog(winnerUid ? `🏆 ${players[winnerUid].name} さんの勝利です!` : 'ゲームが終了しました');
+    });
+  }
+  return Promise.resolve();
+}
+
+/* ================= 刑務所UI ================= */
+function renderJailPanel(){
+  const p = myPlayer();
+  const slot = $('action-slot');
+  slot.innerHTML = `<div class="card">
+    <div style="font-size:13px;margin-bottom:10px;">🔒 服役中です(挑戦${p.jailTurns||0}回目)。どうしますか?</div>
+    <div class="grid">
+      <button class="btn btn-gold" id="btn-jail-pay">保釈金¥50を払う</button>
+      <button class="btn btn-ghost" id="btn-jail-roll">ゾロ目に挑戦する</button>
+    </div>
+    ${p.getOutOfJailCards>0 ? `<button class="btn btn-ghost" style="margin-top:10px;" id="btn-jail-card">カードを使う(所持:${p.getOutOfJailCards}枚)</button>` : ''}
+  </div>`;
+  $('btn-jail-pay').addEventListener('click', jailPay);
+  $('btn-jail-roll').addEventListener('click', jailRollEscape);
+  const cardBtn = $('btn-jail-card'); if(cardBtn) cardBtn.addEventListener('click', jailUseCard);
+}
+function jailPay(){
+  payMoney(MY_UID, 50, '保釈金').then(bankrupt=>{
+    if(bankrupt) return;
+    roomRef.update({['players/'+MY_UID+'/inJail']: false, ['players/'+MY_UID+'/jailTurns']:0}).then(()=>{
+      pushLog(`${myPlayer().name} さんは保釈金¥50を支払い釈放されました`);
+    });
+  });
+}
+function jailUseCard(){
+  const p = myPlayer();
+  roomRef.update({
+    ['players/'+MY_UID+'/getOutOfJailCards']: (p.getOutOfJailCards||0)-1,
+    ['players/'+MY_UID+'/inJail']: false,
+    ['players/'+MY_UID+'/jailTurns']: 0
+  }).then(()=> pushLog(`${p.name} さんはカードを使って釈放されました`));
+}
+function jailRollEscape(){
+  const d1 = 1+Math.floor(Math.random()*6), d2 = 1+Math.floor(Math.random()*6);
+  const p = myPlayer();
+  if(d1===d2){
+    roomRef.update({['players/'+MY_UID+'/inJail']:false,['players/'+MY_UID+'/jailTurns']:0,'turn/diceResult':[d1,d2]}).then(()=>{
+      pushLog(`${p.name} さんはゾロ目(${d1},${d2})で釈放されました!`);
+      const cur = myPlayer();
+      const newPos = (cur.position + d1 + d2) % 40;
+      const passedGo = (cur.position + d1 + d2) >= 40;
+      const upd = {['players/'+MY_UID+'/position']: newPos};
+      if(passedGo) upd['players/'+MY_UID+'/money'] = cur.money + 200;
+      roomRef.update(upd).then(()=>{
+        if(passedGo) pushLog(`${p.name} さんはGOを通過し¥200を受け取りました`);
+        resolveTile(newPos, false);
+      });
+    });
+    return;
+  }
+  const newJailTurns = (p.jailTurns||0)+1;
+  if(newJailTurns>=3){
+    payMoney(MY_UID, 50, '保釈金(強制)').then(bankrupt=>{
+      roomRef.update({['players/'+MY_UID+'/inJail']:false,['players/'+MY_UID+'/jailTurns']:0,'turn/diceResult':[d1,d2]}).then(()=>{
+        pushLog(`${p.name} さんは3回失敗したため保釈金¥50を払って釈放されました`);
+        if(bankrupt) return;
+        const cur = myPlayer();
+        const newPos = (cur.position + d1 + d2) % 40;
+        const passedGo = (cur.position + d1 + d2) >= 40;
+        const upd = {['players/'+MY_UID+'/position']: newPos};
+        if(passedGo) upd['players/'+MY_UID+'/money'] = cur.money + 200;
+        roomRef.update(upd).then(()=> resolveTile(newPos, false));
+      });
+    });
+  } else {
+    roomRef.update({['players/'+MY_UID+'/jailTurns']: newJailTurns, 'turn/diceResult':[d1,d2]}).then(()=>{
+      pushLog(`${p.name} さんは脱出に失敗しました(${d1},${d2})`);
+      roomRef.child('turn/phase').set('resolved');
+    });
+  }
+}
+
+/* ================= トレード ================= */
+function openTradeModal(){
+  const players = roomData.players;
+  const others = Object.keys(players).filter(uid=>uid!==MY_UID && !players[uid].bankrupt);
+  if(others.length===0){ alert('トレード可能な相手がいません'); return; }
+  const optionsHtml = others.map(uid=>`<option value="${uid}">${players[uid].name}</option>`).join('');
+  openModal(`
+    <h3>🤝 トレードを持ちかける</h3>
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:8px;">※ 抵当に入っている物件はトレードできないため一覧に表示されません</div>
+    <div class="field"><label>相手</label><select id="trade-target" class="mini" style="width:100%;">${optionsHtml}</select></div>
+    <div class="field"><label>あなたが渡すお金</label><input id="trade-offer-money" inputmode="numeric" placeholder="0"></div>
+    <div class="field"><label>あなたが渡す物件</label><div class="prop-pick" id="trade-offer-props"></div></div>
+    <div class="field"><label>相手に求めるお金</label><input id="trade-request-money" inputmode="numeric" placeholder="0"></div>
+    <div class="field"><label>相手に求める物件</label><div class="prop-pick" id="trade-request-props"></div></div>
+    <div class="grid">
+      <button class="btn btn-gold" id="btn-trade-submit">この内容で提案する</button>
+      <button class="btn btn-ghost" id="btn-trade-cancel">キャンセル</button>
+    </div>
+  `);
+  const propLabel = (t)=>{
+    const dotColor = t.group ? GROUP_COLOR[t.group] : (t.type==='railroad' ? '#7A7A7A' : '#B08A3E');
+    return `<label><input type="checkbox" value="${t.id}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColor};margin:0 3px;"></span>${t.name}</label>`;
+  };
+  const renderPropPicks = ()=>{
+    const targetUid = $('trade-target').value;
+    $('trade-offer-props').innerHTML = myPropertyTiles(MY_UID).map(propLabel).join('') || '<span style="font-size:11px;color:var(--ink-soft);">所有物件なし</span>';
+    $('trade-request-props').innerHTML = myPropertyTiles(targetUid).map(propLabel).join('') || '<span style="font-size:11px;color:var(--ink-soft);">所有物件なし</span>';
+  };
+  renderPropPicks();
+  $('trade-target').addEventListener('change', renderPropPicks);
+  $('btn-trade-cancel').addEventListener('click', closeModal);
+  $('btn-trade-submit').addEventListener('click', ()=>{
+    const targetUid = $('trade-target').value;
+    const offerMoney = parseInt($('trade-offer-money').value,10) || 0;
+    const requestMoney = parseInt($('trade-request-money').value,10) || 0;
+    const offerProps = Array.from($('trade-offer-props').querySelectorAll('input:checked')).map(el=>parseInt(el.value,10));
+    const requestProps = Array.from($('trade-request-props').querySelectorAll('input:checked')).map(el=>parseInt(el.value,10));
+    if(offerMoney===0 && requestMoney===0 && offerProps.length===0 && requestProps.length===0){
+      alert('お金または物件を最低ひとつ指定してください'); return;
+    }
+    if(offerMoney > myPlayer().money){ alert('提示した金額があなたの所持金を超えています'); return; }
+    const id = roomRef.child('trade').push().key;
+    roomRef.child('trade/'+id).set({
+      from: MY_UID, to: targetUid, offerMoney, offerProps, requestMoney, requestProps,
+      status:'pending', createdAt: Date.now()
+    });
+    pushLog(`${myPlayer().name} さんが ${roomData.players[targetUid].name} さんにトレードを提案しました`);
+    closeModal();
+  });
+}
+function myPropertyTiles(uid){
+  return BOARD.filter(t=>{
+    const ts = roomData.tiles && roomData.tiles[t.id];
+    return ts && ts.owner===uid && !ts.mortgaged && (t.type==='property'||t.type==='railroad'||t.type==='utility');
+  });
+}
+function renderTradeInbox(){
+  const trades = roomData.trade || {};
+  const box = $('trade-inbox');
+  const ids = Object.keys(trades).filter(id=>trades[id].from===MY_UID || trades[id].to===MY_UID);
+  if(ids.length===0){ box.innerHTML=''; return; }
+  box.innerHTML = ids.map(id=>{
+    const t = trades[id];
+    const fromName = roomData.players[t.from] ? roomData.players[t.from].name : '?';
+    const toName = roomData.players[t.to] ? roomData.players[t.to].name : '?';
+    const offerPropsNames = t.offerProps.map(pid=>BOARD[pid].name).join('、') || 'なし';
+    const requestPropsNames = t.requestProps.map(pid=>BOARD[pid].name).join('、') || 'なし';
+    const isIncoming = t.to===MY_UID;
+    return `<div class="trade-card">
+      <div class="ttitle">${fromName} → ${toName} のトレード提案</div>
+      <div class="tbody">
+        渡す: ¥${t.offerMoney} + ${offerPropsNames}<br>
+        求める: ¥${t.requestMoney} + ${requestPropsNames}
+      </div>
+      ${isIncoming ? `
+        <div class="grid">
+          <button class="btn btn-gold" data-accept="${id}">承諾する</button>
+          <button class="btn btn-ghost" data-reject="${id}">断る</button>
+        </div>` : `
+        <div class="grid">
+          <button class="btn btn-ghost" data-cancel="${id}">提案を取り消す</button>
+        </div>`}
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-accept]').forEach(b=>b.addEventListener('click',()=>acceptTrade(b.dataset.accept)));
+  box.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click',()=>rejectTrade(b.dataset.reject)));
+  box.querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',()=>rejectTrade(b.dataset.cancel)));
+}
+function acceptTrade(id){
+  const t = roomData.trade[id];
+  if(!t) return;
+  const fromP = roomData.players[t.from], toP = roomData.players[t.to];
+  const updates = {};
+  updates['players/'+t.from+'/money'] = fromP.money - t.offerMoney + t.requestMoney;
+  updates['players/'+t.to+'/money'] = toP.money - t.requestMoney + t.offerMoney;
+  t.offerProps.forEach(pid=> updates['tiles/'+pid+'/owner'] = t.to);
+  t.requestProps.forEach(pid=> updates['tiles/'+pid+'/owner'] = t.from);
+  updates['trade/'+id] = null;
+  const offerPropsNames = t.offerProps.map(pid=>BOARD[pid].name).join('、') || 'なし';
+  const requestPropsNames = t.requestProps.map(pid=>BOARD[pid].name).join('、') || 'なし';
+  roomRef.update(updates).then(()=>{
+    pushLog(`✅ トレード成立: ${fromP.name}さん→${toP.name}さん(¥${t.offerMoney}+${offerPropsNames}) / ${toP.name}さん→${fromP.name}さん(¥${t.requestMoney}+${requestPropsNames})`);
+  });
+}
+function rejectTrade(id){
+  roomRef.child('trade/'+id).remove();
+  pushLog('トレードの提案が取り下げられました');
+}
+$('btn-open-trade').addEventListener('click', openTradeModal);
+
+/* ================= 建物(家・ホテル) ================= */
+function openBuildModal(){
+  const groups = {};
+  BOARD.forEach(t=>{ if(t.type==='property'){ groups[t.group]=groups[t.group]||[]; groups[t.group].push(t); }});
+  const myGroups = Object.keys(groups).filter(g=> groups[g].every(t=> roomData.tiles[t.id] && roomData.tiles[t.id].owner===MY_UID));
+  if(myGroups.length===0){
+    openModal(`<h3>🏠 建物を建てる</h3><div style="font-size:13px;color:var(--ink-soft);">同じ色グループの物件をすべて所有しているものがありません。まずは色グループを独占しましょう。</div>
+      <button class="btn btn-ghost" style="margin-top:12px;" id="btn-build-close">閉じる</button>`);
+    $('btn-build-close').addEventListener('click', closeModal);
+    return;
+  }
+  let html = `<h3>🏠 建物を建てる</h3>`;
+  myGroups.forEach(g=>{
+    groups[g].forEach(t=>{
+      const ts = roomData.tiles[t.id];
+      const level = ts.hotel ? 'ホテル' : (ts.houses||0)+'軒';
+      html += `<div class="trade-card">
+        <div class="ttitle">${t.name}(現在:${level})</div>
+        <div class="grid">
+          <button class="btn btn-gold" ${ts.hotel?'disabled':''} data-build="${t.id}">${(ts.houses||0)>=4?'ホテルを建てる':'家を建てる'}(¥${t.houseCost})</button>
+          <button class="btn btn-ghost" ${(!ts.houses && !ts.hotel)?'disabled':''} data-sell="${t.id}">売却(¥${Math.floor(t.houseCost/2)})</button>
+        </div>
+      </div>`;
+    });
+  });
+  html += `<button class="btn btn-ghost" id="btn-build-close">閉じる</button>`;
+  openModal(html);
+  $('modal-content').querySelectorAll('[data-build]').forEach(b=>b.addEventListener('click',()=>buildHouse(parseInt(b.dataset.build,10))));
+  $('modal-content').querySelectorAll('[data-sell]').forEach(b=>b.addEventListener('click',()=>sellHouse(parseInt(b.dataset.sell,10))));
+  $('btn-build-close').addEventListener('click', closeModal);
+}
+function buildHouse(tileId){
+  const t = BOARD[tileId];
+  const ts = roomData.tiles[tileId];
+  const p = myPlayer();
+  if(ts.hotel){ alert('すでにホテルが建っています'); return; }
+  const cost = t.houseCost;
+  if(p.money < cost){ alert('資金が足りません'); return; }
+  if(roomData.settings.houseLimitEnabled){
+    let totalHouses=0, totalHotels=0;
+    Object.values(roomData.tiles).forEach(x=>{ if(x.hotel) totalHotels++; else totalHouses += (x.houses||0); });
+    if((ts.houses||0)>=4){
+      if(totalHotels>=12){ alert('ホテルの在庫がありません(全体で12軒まで)'); return; }
+    } else {
+      if(totalHouses>=32){ alert('家の在庫がありません(全体で32軒まで)'); return; }
+    }
+  }
+  const updates = { ['players/'+MY_UID+'/money']: p.money-cost };
+  const becomesHotel = (ts.houses||0)>=4;
+  if(becomesHotel){ updates['tiles/'+tileId+'/hotel']=true; updates['tiles/'+tileId+'/houses']=0; }
+  else { updates['tiles/'+tileId+'/houses'] = (ts.houses||0)+1; }
+  roomRef.update(updates).then(()=>{
+    pushLog(`${p.name} さんが ${t.name} に${becomesHotel?'ホテル':'家'}を建てました(¥${cost}支払い)`);
+    closeModal(); openBuildModal();
+  });
+}
+function sellHouse(tileId){
+  const t = BOARD[tileId];
+  const ts = roomData.tiles[tileId];
+  const p = myPlayer();
+  const refund = Math.floor(t.houseCost/2);
+  const updates = { ['players/'+MY_UID+'/money']: p.money+refund };
+  if(ts.hotel){ updates['tiles/'+tileId+'/hotel']=false; updates['tiles/'+tileId+'/houses']=4; }
+  else { updates['tiles/'+tileId+'/houses'] = Math.max((ts.houses||0)-1,0); }
+  roomRef.update(updates).then(()=>{
+    pushLog(`${p.name} さんが ${t.name} の建物を1つ売却しました(¥${refund}受取)`);
+    closeModal(); openBuildModal();
+  });
+}
+$('btn-open-build').addEventListener('click', openBuildModal);
+
+/* ================= 抵当(モーゲージ) ================= */
+function openMortgageModal(){
+  const myTiles = BOARD.filter(t=>{
+    const ts = roomData.tiles[t.id];
+    return ts && ts.owner===MY_UID && (t.type==='property'||t.type==='railroad'||t.type==='utility');
+  });
+  if(myTiles.length===0){
+    openModal(`<h3>🏦 抵当</h3><div style="font-size:13px;color:var(--ink-soft);">所有している物件がありません。</div>
+      <button class="btn btn-ghost" style="margin-top:12px;" id="btn-mortgage-close">閉じる</button>`);
+    $('btn-mortgage-close').addEventListener('click', closeModal);
+    return;
+  }
+  let html = `<h3>🏦 抵当</h3><div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">
+    抵当に入れると物件価格の半額を受け取れますが、抵当中はその物件の家賃を受け取れません。解除には抵当額+利息10%が必要です。建物が建っている物件は先に売却してください。</div>`;
+  myTiles.forEach(t=>{
+    const ts = roomData.tiles[t.id];
+    const mortgageValue = Math.floor(t.price/2);
+    const unmortgageCost = Math.ceil(mortgageValue*1.1);
+    const hasBuildings = (ts.houses||0)>0 || ts.hotel;
+    html += `<div class="trade-card">
+      <div class="ttitle">${t.name} ${ts.mortgaged?'(抵当中)':''}</div>
+      <div class="grid">
+        ${ts.mortgaged
+          ? `<button class="btn btn-gold" data-unmortgage="${t.id}">解除する(¥${unmortgageCost})</button><div></div>`
+          : `<button class="btn btn-ghost" ${hasBuildings?'disabled':''} data-mortgage="${t.id}">抵当に入れる(+¥${mortgageValue})</button><div></div>`}
+      </div>
+    </div>`;
+  });
+  html += `<button class="btn btn-ghost" id="btn-mortgage-close">閉じる</button>`;
+  openModal(html);
+  $('modal-content').querySelectorAll('[data-mortgage]').forEach(b=>b.addEventListener('click',()=>doMortgage(parseInt(b.dataset.mortgage,10))));
+  $('modal-content').querySelectorAll('[data-unmortgage]').forEach(b=>b.addEventListener('click',()=>doUnmortgage(parseInt(b.dataset.unmortgage,10))));
+  $('btn-mortgage-close').addEventListener('click', closeModal);
+}
+function doMortgage(tileId){
+  const t = BOARD[tileId];
+  const ts = roomData.tiles[tileId];
+  const p = myPlayer();
+  if((ts.houses||0)>0 || ts.hotel){ alert('建物が建っている物件は抵当に入れられません。先に売却してください'); return; }
+  const value = Math.floor(t.price/2);
+  roomRef.update({
+    ['tiles/'+tileId+'/mortgaged']: true,
+    ['players/'+MY_UID+'/money']: p.money+value
+  }).then(()=>{
+    pushLog(`${p.name} さんが ${t.name} を抵当に入れ¥${value}を受け取りました`);
+    closeModal(); openMortgageModal();
+  });
+}
+function doUnmortgage(tileId){
+  const t = BOARD[tileId];
+  const p = myPlayer();
+  const value = Math.floor(t.price/2);
+  const cost = Math.ceil(value*1.1);
+  if(p.money<cost){ alert('資金が足りません'); return; }
+  roomRef.update({
+    ['tiles/'+tileId+'/mortgaged']: false,
+    ['players/'+MY_UID+'/money']: p.money-cost
+  }).then(()=>{
+    pushLog(`${p.name} さんが ${t.name} の抵当を解除しました(¥${cost})`);
+    closeModal(); openMortgageModal();
+  });
+}
+$('btn-open-mortgage').addEventListener('click', openMortgageModal);
+
+/* ================= 所持品一覧 ================= */
+function openMyAssetsModal(){
+  const p = myPlayer();
+  const myTiles = BOARD.filter(t=>{
+    const ts = roomData.tiles[t.id];
+    return ts && ts.owner===MY_UID;
+  });
+  let html = `<h3>🎫 所持品一覧</h3>`;
+  html += `<div style="font-size:14px;margin-bottom:12px;">
+    所持金: <b>¥${p.money.toLocaleString()}</b> ・ 刑務所から出られるカード: <b>${p.getOutOfJailCards||0}枚</b>
+  </div>`;
+  if(myTiles.length===0){
+    html += `<div style="font-size:13px;color:var(--ink-soft);">まだ物件を所有していません。</div>`;
+  } else {
+    myTiles.forEach(t=>{
+      const ts = roomData.tiles[t.id];
+      const statusParts = [];
+      if(t.type==='property'){
+        if(ts.hotel) statusParts.push('ホテル');
+        else if((ts.houses||0)>0) statusParts.push(`家${ts.houses}軒`);
+      }
+      if(ts.mortgaged) statusParts.push('抵当中');
+      const statusText = statusParts.length ? `(${statusParts.join('・')})` : '';
+      const chip = t.group ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${GROUP_COLOR[t.group]};margin-right:6px;"></span>` : '';
+      html += `<div class="trade-card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" data-detail="${t.id}">
+        <div style="font-size:13px;">${chip}${t.name} <span style="color:var(--ink-soft);font-size:11px;">${statusText}</span></div>
+        <div style="font-size:11px;color:var(--ink-soft);">¥${t.price} ›</div>
+      </div>`;
+    });
+  }
+  html += `<button class="btn btn-ghost" style="margin-top:8px;" id="btn-assets-close">閉じる</button>`;
+  openModal(html);
+  $('modal-content').querySelectorAll('[data-detail]').forEach(el=>{
+    el.addEventListener('click', ()=> openPropertyDetail(parseInt(el.dataset.detail,10)));
+  });
+  $('btn-assets-close').addEventListener('click', closeModal);
+}
+$('btn-open-assets').addEventListener('click', openMyAssetsModal);
+
+/* ================= ルール説明 ================= */
+function getRulesHtml(){
+  return `
+    <h3>📖 日本縦断モノポリー ルール</h3>
+    <div style="font-size:13px;line-height:1.8;max-height:65vh;overflow-y:auto;">
+      <b>■ 基本の流れ</b><br>
+      自分の番になったら「サイコロを振る」を押します。出た目の分だけコマが進み、止まったマスに応じて処理が行われます。処理が終わったら「ターンを終える」を押して次の人に手番を渡します。<br><br>
+
+      <b>■ 都市(物件)マス</b><br>
+      誰も所有していない都市に止まったら、購入するか見送るか選べます。見送った場合、ルーム設定で「オークション」が有効ならその場で競売にかけられます。他の人が持っている都市に止まると家賃を支払います。同じ色グループを全部同じ人が所有していると、家賃が2倍になります(未建設の場合)。<br><br>
+
+      <b>■ 家・ホテル</b><br>
+      同じ色グループを独占すると、そのグループの物件に家(最大4軒)・ホテルを建てられます(「🏠 建設」ボタン)。家が増えるほど家賃も上がります。ルーム設定で「在庫制限」が有効な場合、家は全体で32軒・ホテルは12軒までしか建てられません。<br><br>
+
+      <b>■ 新幹線・公共施設</b><br>
+      新幹線駅は、同じ人が持っている駅の数(1〜4)によって家賃が決まります(¥25/¥50/¥100/¥200)。公共施設(電力会社・水道局)は、その時のサイコロの出目に応じて家賃が変わります(1施設所有:出目×4、2施設所有:出目×10)。<br><br>
+
+      <b>■ 税金マス</b><br>
+      止まると決まった金額を銀行に支払います。<br><br>
+
+      <b>■ チャンス・共同募金</b><br>
+      止まるとカードを1枚引き、書かれた効果(移動・お金の受け渡し・修繕費・刑務所行きなど)がそのまま適用されます。<br><br>
+
+      <b>■ 刑務所</b><br>
+      「刑務所(見学のみ)」はただの通過点で何も起こりません。「刑務所へ行く」マスに止まる、チャンス/共同募金で指定される、ゾロ目を3回連続で出す、のいずれかで実際に収監されます。収監中は自分の番に「保釈金¥50を払う」「ゾロ目に挑戦する(成功で即釈放)」「所持していればカードを使う」のいずれかを選べます。ゾロ目に3回失敗すると、強制的に保釈金を払って釈放されます。<br><br>
+
+      <b>■ 支払いとお金が足りない時</b><br>
+      家賃や税金などが払えない場合、即座に破産するのではなく、所持する物件を抵当に入れて不足分を補うチャンスがあります。全て抵当に入れてもなお足りない場合のみ破産となり、所有物件は銀行に戻ります。<br><br>
+
+      <b>■ 抵当</b><br>
+      物件を抵当に入れると価格の半額を受け取れますが、抵当中はその物件の家賃が発生しません。解除には抵当額+利息10%が必要です(「🏦 抵当」ボタン)。<br><br>
+
+      <b>■ トレード</b><br>
+      いつでも他のプレイヤーにお金・物件を組み合わせた交換を提案できます(「🤝 トレード」ボタン)。相手が承諾すると成立します。<br><br>
+
+      <b>■ オークション</b><br>
+      ルーム設定で有効な場合、物件の購入を見送るとその場でオークションが始まります。参加者は交互に金額を釣り上げるか降りるかを選び、最後まで残った人が現在の入札額でその物件を落札します。<br><br>
+
+      <b>■ 勝利条件</b><br>
+      ルーム設定で選べます。<br>
+      ・最後の1人まで:破産して脱落した人を除き、最後に残った1人の勝ち(脱落後も観戦は可能)<br>
+      ・規定ターン数:設定した手番数(全員合計)に達した時点で、所持金+所有物件の価値が最も高い人の勝ち<br><br>
+
+      <b>■ その他のルーム設定</b><br>
+      初期所持金(¥1,000〜¥4,000)、ゾロ目でもう一度振れるルールの有無、ターン時間制限(60秒で自動的にスキップ)の有無を、ホストがゲーム開始前に設定できます。
+    </div>
+    <button class="btn btn-ghost" style="margin-top:14px;" id="btn-rules-close">閉じる</button>
+  `;
+}
+function openRulesModal(){
+  openModal(getRulesHtml());
+  $('btn-rules-close').addEventListener('click', closeModal);
+}
+$('btn-open-rules').addEventListener('click', openRulesModal);
+$('btn-open-rules-lobby').addEventListener('click', openRulesModal);
+
+function openPropertyDetail(tileId){
+  const t = BOARD[tileId];
+  const ts = roomData.tiles[tileId];
+  const chip = t.group ? `<div style="width:100%;height:6px;border-radius:4px;background:${GROUP_COLOR[t.group]};margin-bottom:12px;"></div>` : '';
+  let body = `購入価格: ¥${t.price}<br>`;
+  if(t.type==='property'){
+    body += `家賃(家なし): ¥${t.baseRent}<br>`;
+    body += `家賃(独占・家なし): ¥${t.baseRent*2}<br>`;
+    for(let h=1;h<=4;h++){ body += `家賃(家${h}軒): ¥${t.baseRent*(2+h*2)}<br>`; }
+    body += `家賃(ホテル): ¥${t.baseRent*16}<br>`;
+    body += `建設費(1軒あたり): ¥${t.houseCost}<br>`;
+  } else if(t.type==='railroad'){
+    body += `家賃(1駅所有): ¥25 ・ (2駅): ¥50 ・ (3駅): ¥100 ・ (4駅): ¥200<br>`;
+  } else if(t.type==='utility'){
+    body += `家賃: サイコロの出目×4(1施設所有時) / ×10(2施設所有時)<br>`;
+  }
+  const mortgageValue = Math.floor(t.price/2);
+  body += `抵当価格: ¥${mortgageValue} ・ 解除費用: ¥${Math.ceil(mortgageValue*1.1)}<br>`;
+  if(ts){
+    const parts = [];
+    parts.push(ts.owner ? `所有者: ${roomData.players[ts.owner] ? roomData.players[ts.owner].name : '?'}` : '銀行所有(未購入)');
+    if(ts.hotel) parts.push('ホテル建設済み');
+    else if((ts.houses||0)>0) parts.push(`家${ts.houses}軒`);
+    if(ts.mortgaged) parts.push('抵当中');
+    body += `<br>現在の状態: ${parts.join('・')}`;
+  }
+  openModal(`<h3>${t.name}</h3>${chip}<div style="font-size:13px;line-height:1.9;">${body}</div>
+    <div class="grid" style="margin-top:14px;">
+      <button class="btn btn-ghost" id="btn-detail-back">一覧に戻る</button>
+      <button class="btn btn-ghost" id="btn-detail-close">閉じる</button>
+    </div>`);
+  $('btn-detail-back').addEventListener('click', openMyAssetsModal);
+  $('btn-detail-close').addEventListener('click', closeModal);
+}
+
+/* ================= オークション ================= */
+function startAuction(){
+  const p = myPlayer();
+  const tile = BOARD[p.position];
+  const participants = Object.keys(roomData.players).filter(uid=>!roomData.players[uid].bankrupt);
+  roomRef.update({
+    'auction/active': true,
+    'auction/tileId': tile.id,
+    'auction/currentBid': 0,
+    'auction/currentBidder': null,
+    'auction/remainingUids': participants,
+    'turn/phase': 'auction'
+  });
+}
+function bidAuction(amount){
+  const auction = roomData.auction;
+  roomRef.update({ 'auction/currentBid': amount, 'auction/currentBidder': MY_UID });
+}
+function withdrawAuction(){
+  const remaining = (roomData.auction.remainingUids||[]).filter(u=>u!==MY_UID);
+  if(remaining.length<=1){
+    finalizeAuction(remaining[0]||null);
+  } else {
+    roomRef.update({ 'auction/remainingUids': remaining });
+  }
+}
+function finalizeAuction(winnerUid){
+  const auction = roomData.auction;
+  const tile = BOARD[auction.tileId];
+  const updates = {'auction/active': false, 'turn/phase':'resolved'};
+  if(winnerUid && auction.currentBid>0){
+    updates['tiles/'+tile.id+'/owner'] = winnerUid;
+    updates['players/'+winnerUid+'/money'] = roomData.players[winnerUid].money - auction.currentBid;
+    roomRef.update(updates).then(()=>{
+      pushLog(`🔨 オークションの結果、${roomData.players[winnerUid].name} さんが ${tile.name} を¥${auction.currentBid}で落札しました`);
+    });
+  } else {
+    roomRef.update(updates).then(()=>{
+      pushLog(`${tile.name} のオークションは入札者がなく流れました`);
+    });
+  }
+}
+function renderAuctionPanel(){
+  const auction = roomData.auction;
+  const tile = BOARD[auction.tileId];
+  const slot = $('action-slot');
+  const remaining = auction.remainingUids || [];
+  const iAmIn = remaining.includes(MY_UID);
+  const bidderName = auction.currentBidder ? roomData.players[auction.currentBidder].name : 'なし';
+  slot.innerHTML = `<div class="card">
+    <div style="font-size:13px;"><b>${tile.name}</b> のオークション中</div>
+    <div class="amount">¥${auction.currentBid}</div>
+    <div style="font-size:12px;color:var(--ink-soft);">現在の最高額: ${bidderName} ・ 参加中: ${remaining.length}人</div>
+    ${iAmIn ? `
+      <div class="field" style="margin-top:10px;">
+        <input id="auction-bid-input" inputmode="numeric" placeholder="¥${auction.currentBid+10}以上を入力">
+      </div>
+      <div class="grid">
+        <button class="btn btn-gold" id="btn-auction-bid">入札する</button>
+        <button class="btn btn-ghost" id="btn-auction-withdraw">降りる</button>
+      </div>` : `<div style="font-size:12px;color:var(--ink-soft);margin-top:8px;">あなたは降りました。他のプレイヤーの入札を待っています…</div>`}
+  </div>`;
+  if(iAmIn){
+    $('btn-auction-bid').addEventListener('click', ()=>{
+      const val = parseInt($('auction-bid-input').value,10);
+      if(!val || val<=auction.currentBid){ alert('現在の入札額より高い金額を入力してください'); return; }
+      if(val>myPlayer().money){ alert('所持金が足りません'); return; }
+      bidAuction(val);
+    });
+    $('btn-auction-withdraw').addEventListener('click', withdrawAuction);
+  }
+}
+
+/* ================= 終了画面 ================= */
+function renderEndScreen(){
+  const players = roomData.players;
+  const winner = roomData.winnerUid ? players[roomData.winnerUid] : null;
+  $('end-title').textContent = winner ? `${winner.name} さんの勝利!` : 'ゲーム終了';
+  $('end-sub').textContent = 'お疲れさまでした';
+  const order = playerOrder();
+  $('end-results').innerHTML = order.map(uid=>{
+    const p = players[uid];
+    const myTiles = BOARD.filter(t=>{
+      const ts = roomData.tiles && roomData.tiles[t.id];
+      return ts && ts.owner===uid;
+    });
+    const propsHtml = myTiles.length>0
+      ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${myTiles.map(t=>{
+          const dotColor = t.group ? GROUP_COLOR[t.group] : (t.type==='railroad' ? '#7A7A7A' : '#B08A3E');
+          return `<span style="font-size:10px;background:#F3EEE0;border:1px solid var(--line);border-radius:8px;padding:3px 7px;">
+            <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dotColor};margin-right:3px;"></span>${t.name}</span>`;
+        }).join('')}</div>`
+      : `<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">所有物件なし</div>`;
+    return `<div class="player-row" style="align-items:flex-start;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar" style="background:${PLAYER_COLORS[p.colorIndex % PLAYER_COLORS.length]}">${p.name[0]}</div>
+        <div>${p.name} — ¥${p.money.toLocaleString()} ${p.bankrupt?'(破産)':''}</div>
+      </div>
+      ${propsHtml}
+    </div>`;
+  }).join('');
+
+  const log = roomData.log || {};
+  const logKeys = Object.keys(log).sort((a,b)=>log[b].timestamp-log[a].timestamp);
+  $('end-log-box').innerHTML = logKeys.map(k=>`<div>${log[k].message}</div>`).join('') || '<div>ログはありません</div>';
+}
+
+function resetToTitle(){
+  if(roomRef) roomRef.off();
+  clearInterval(turnTimerHandle);
+  localStorage.removeItem('monopoly_last_room');
+  ROOM_CODE = null; roomRef = null; roomData = null; IS_HOST = false; MY_NAME = null;
+  previousRoomStatus = null; lastKnownMyPosition = null;
+  $('create-name').value = ''; $('join-code').value = ''; $('join-name').value = '';
+  $('title-error').textContent = '';
+  showScreen('screen-title');
+}
+$('btn-back-to-title').addEventListener('click', resetToTitle);
+
+function leaveRoom(){
+  if(!confirm('本当に退出しますか?\n(このルーム自体は削除されず、他の参加者はそのまま続けられます)')) return;
+  resetToTitle();
+}
+$('btn-exit-lobby').addEventListener('click', leaveRoom);
+$('btn-exit-game').addEventListener('click', leaveRoom);
+
+/* ================= 自動再接続 ================= */
+async function tryAutoRejoin(){
+  const savedCode = localStorage.getItem('monopoly_last_room');
+  if(!savedCode) return;
+  try{
+    const snap = await db.ref('rooms/'+savedCode).get();
+    if(!snap.exists()){ localStorage.removeItem('monopoly_last_room'); return; }
+    const data = snap.val();
+    if(!data.players || !data.players[MY_UID]){ localStorage.removeItem('monopoly_last_room'); return; }
+    ROOM_CODE = savedCode;
+    roomRef = db.ref('rooms/'+ROOM_CODE);
+    IS_HOST = data.settings.hostUid === MY_UID;
+    MY_NAME = data.players[MY_UID].name;
+    enterLobby();
+  }catch(err){
+    console.error('自動再接続に失敗しました', err);
+  }
+}
+
+/* 起動時に認証してから、以前のルームがあれば自動的に復帰する */
+ensureAuth().then(tryAutoRejoin);
+</script>
+</body>
+</html>
